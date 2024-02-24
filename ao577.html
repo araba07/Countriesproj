@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Country Details</title>
+    <!-- jQuery library -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+</head>
+<!--Form for selecting a region-->
+<body>
+    <div style="margin-left: 20px;">
+        <form>
+            <br><br>
+            <label for="countries">Select a region</label>
+            <select name="countries" id="countries">
+                <option value="Africa">Africa</option>
+                <option value="Asia">Asia</option>
+                <option value="Europe">Europe</option>
+                <option value="Americas">Americas</option>
+                <option value="Antarctic">Antarctic</option>
+                <option value="Oceania">Oceania</option>
+            </select>
+            <br><br>
+            <!--Input for searching countires-->
+            <input type="text" id="myInput" onkeyup="filterTable()" placeholder="Search for Countries.." title="Type in a name">
+            <br><br>
+        </form>
+    </div>
+   <!--This is a table for displaying the Largest country, the number of countries and the most populated country-->
+    <table id="additional-info-table" class="table table-striped" style="width:50%">
+        <thead>
+            <tr>
+                <th>Total Countries</th>
+                <th>Largest Country</th>
+                <th>Most Populated Country</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td id="totalCountries"></td>
+                <td id="largestCountry"></td>
+                <td id="mostPopulatedCountry"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br><br>
+<!--Table for Continent and Country details-->
+    <table id="countries-table-body" class="table table-striped" style="width:100%">
+        <thead>
+            <tr>
+                <th>Country Code</th>
+                <th>Flag</th>
+                <th>Name</th>
+                <th>Capital</th>
+                <th>Population</th>
+                <th>Area</th>
+                <th>Population Density</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+      //Array to store country data
+        let countryData = [];
+      //Function to populate the main table with country data
+
+        function populateTable(data) {
+            const tableBody = $("#countries-table-body tbody");
+            tableBody.empty();
+
+            data.forEach(item => {
+                const row = tableBody[0].insertRow();
+                $(row).append("<td>" + item.code + "</td>");
+                $(row).append("<td><img src='" + item.flag + "' alt='flag' style='width: 50px; height: auto;'></td>");
+                $(row).append("<td>" + item.name + "</td>");
+                $(row).append("<td>" + item.capital + "</td>");
+                $(row).append("<td>" + item.population + "</td>");
+                $(row).append("<td>" + item.area + "</td>");
+                const populationDensity = item.population / item.area;
+                $(row).append("<td>" + populationDensity.toFixed(2));
+            });
+        }
+        //This function is to populate the additional information table
+
+        function populateAdditionalInfo(data) {
+            let totalCountries = data.length;
+            let largestCountry = data.reduce((prev, current) => (prev.area > current.area) ? prev : current);
+            let mostPopulatedCountry = data.reduce((prev, current) => (prev.population > current.population) ? prev : current);
+
+            $("#totalCountries").text(totalCountries);
+            $("#largestCountry").text(largestCountry.name);
+            $("#mostPopulatedCountry").text(mostPopulatedCountry.name);
+        }
+        //Event listener for the Continent selection dropdown
+
+        $("#countries").on("change", function () {
+            const selectedRegion = $(this).val();
+
+            // API URL for fetching country data
+            const apiUrl = `https://www.cs.kent.ac.uk/people/staff/yh/api/country-data/countries/region/${selectedRegion}`;
+           // AJAX request to fetch country data
+            $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    countryData = data;
+                    populateTable(data);
+                    populateAdditionalInfo(data);
+                }
+            });
+        });
+          //Funtion to filter data based on user input
+        function filterTable() {
+            const searchText = $("#myInput").val().toLowerCase();
+            const filteredData = countryData.filter(item => item.name.toLowerCase().includes(searchText));
+            populateTable(filteredData);
+            populateAdditionalInfo(filteredData);
+        }
+    </script>
+</body>
+
+</html>
+
